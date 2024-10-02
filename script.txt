@@ -1,9 +1,0 @@
-pwd
-ls
-cd folder
-ls
-cat test.txt
-date
-echo "Hello World"
-cal
-exit
