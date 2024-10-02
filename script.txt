@@ -1,0 +1,10 @@
+pwd
+cd tests
+cat test1.txt
+cat test2.txt
+cat test3.txt
+ls
+date
+echo "Hello World"
+cal
+exit
