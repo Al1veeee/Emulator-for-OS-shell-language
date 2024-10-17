@@ -7,4 +7,3 @@ ls
 date
 echo "Hello World"
 cal
-exit

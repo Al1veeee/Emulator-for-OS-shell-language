@@ -15,8 +15,9 @@ def delete_symbol(path):
 
 def log_action(logfile, action, result):
     with open(logfile, mode='a', newline='') as file:
-        writer = csv.writer(file)
+        writer = csv.writer(file, delimiter=';')
         writer.writerow([datetime.now().strftime('%Y-%m-%d %H:%M:%S'), action, result])
+
 
 def ls(path, files, folder=None):
     path = delete_symbol(path)
@@ -40,7 +41,7 @@ def ls(path, files, folder=None):
         items.add(file_names[0])
 
     for item in sorted(items):
-        print("\033[33m{}\033[0m".format(item))
+        print(item)
 
 def cd(path, extension_path, files):
     global local_path
@@ -81,7 +82,7 @@ def cd(path, extension_path, files):
 def cat(path, extension_path, tar_file):
 
     if not extension_path:
-        print("\033[31m{}\033[0m".format("No file specified"))
+        print("No file specified")
         return
 
     if "root:" in extension_path:
@@ -98,7 +99,7 @@ def cat(path, extension_path, tar_file):
             else:
                 raise KeyError
     except (KeyError, IndexError):
-        print("\033[31m{}\033[0m".format("Can't open this file"))
+        print("Can't open this file")
 
 def date():
     print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
@@ -108,6 +109,43 @@ def echo(text):
 
 def cal():
     print(calendar.month(datetime.now().year, datetime.now().month))
+
+def execute_command(command, args, all_files):
+    global local_path
+    if command[0] == "pwd":
+        print("root:" + ("/" if not local_path else local_path))
+        log_action(args.log, 'pwd', local_path)
+    elif command[0] == "ls":
+        if len(command) == 1:
+            ls(local_path, all_files)
+        elif len(command) == 2:
+            ls(local_path, all_files, command[1])
+        log_action(args.log, 'ls', command[1] if len(command) > 1 else "")
+    elif command[0] == "cd":
+        if cd(local_path, command[1], all_files):
+            log_action(args.log, 'cd', command[1])
+        else:
+            print("The path does not exist")
+    elif command[0] == "cat":
+        if len(command) < 2:
+            print("No file specified")
+        else:
+            cat(local_path, command[1], args.tarfile)
+            log_action(args.log, 'cat', command[1])
+    elif command[0] == "date":
+        date()
+        log_action(args.log, 'date', '')
+    elif command[0] == "echo":
+        echo(' '.join(command[1:]))
+        log_action(args.log, 'echo', ' '.join(command[1:]))
+    elif command[0] == "cal":
+        cal()
+        log_action(args.log, 'cal', '')
+    elif command[0] == "exit":
+        log_action(args.log, 'exit', '')
+        exit(0)
+    else:
+        print("Unknown command")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -123,44 +161,21 @@ if __name__ == '__main__':
     with tarfile.open(args.tarfile) as tar:
         all_files = tar.getmembers()
 
+        # Выполнение команд из скрипта
         if args.script:
             try:
                 with open(args.script, 'r') as script_file:
                     for command in script_file:
                         command = command.strip().split(" ")
-                        if command[0] == "pwd":
-                            print("\033[32m{}\033[0m".format("  " + ROOT_PATH + ("/" if not local_path else local_path)))
-                            log_action(args.log, 'pwd', local_path)
-                        elif command[0] == "ls":
-                            if len(command) == 1:
-                                ls(local_path, all_files)
-                            elif len(command) == 2:
-                                ls(local_path, all_files, command[1])
-                            log_action(args.log, 'ls', command[1] if len(command) > 1 else "")
-                        elif command[0] == "cd":
-                            if cd(local_path, command[1], all_files):
-                                log_action(args.log, 'cd', command[1])
-                            else:
-                                print("\033[31m{}\033[0m".format("The path does not exist"))
-                        elif command[0] == "cat":
-                            if len(command) < 2:
-                                print("\033[31m{}\033[0m".format("No file specified"))
-                            else:
-                                cat(local_path, command[1], args.tarfile)
-                                log_action(args.log, 'cat', command[1])
-                        elif command[0] == "date":
-                            date()
-                            log_action(args.log, 'date', '')
-                        elif command[0] == "echo":
-                            echo(' '.join(command[1:]))
-                            log_action(args.log, 'echo', ' '.join(command[1:]))
-                        elif command[0] == "cal":
-                            cal()
-                            log_action(args.log, 'cal', '')
-                        elif command[0] == "exit":
-                            log_action(args.log, 'exit', '')
-                            exit(0)
-                        else:
-                            print("\033[31m{}\033[0m".format("Unknown command"))
+                        execute_command(command, args, all_files)
             except IOError as e:
                 print(f"Error reading script: " + str(e))
+
+        # Переход в интерактивный режим после выполнения скрипта
+        while True:
+            try:
+                user_input = input("shell> ").strip().split(" ")
+                execute_command(user_input, args, all_files)
+            except KeyboardInterrupt:
+                print("\nExiting shell.")
+                break
