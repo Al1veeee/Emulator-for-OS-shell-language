@@ -245,8 +245,8 @@ cat test3.txt — выводит содержимое файла test3.txt на 
 ### Код тестов:
 ![image](https://github.com/user-attachments/assets/6c71eeb4-ab54-4061-a64f-db981d58dde8)
 
-### Результаты тестирования:
-
+### Результаты тестирования: 
+Ввод: ```python -m unittest -v test_commands.py```
 
 После выполнения тестов, были получены следующие результаты:
 
