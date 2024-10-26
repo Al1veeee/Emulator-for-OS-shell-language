@@ -10,7 +10,7 @@ class TestShellCommands(unittest.TestCase):
 
     def setUp(self):
         # Задаем путь к архиву
-        self.tar_file_path = r'C:\Users\User\Desktop\konf\tests.tar'
+        self.tar_file_path = r'Ваш путь к файлу .tar'
 
         # Открываем tar файл для тестов
         with tarfile.open(self.tar_file_path) as tar:
